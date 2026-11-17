@@ -29,6 +29,42 @@ REQUIRED = ("item_id", "claim_id", "failure_modes", "provenance", "split", "eval
 
 FM_CODE = re.compile(r"FM-\d{2}")
 
+# M1: public claims are tagged with the failure modes they exercise.  Keep this
+# mapping in the generator so a later --build preserves the reviewed labels.
+FAILURE_MODES_BY_CLAIM: dict[str, list[str]] = {
+    "C-001": ["FM-01"],
+    "C-002": ["FM-03"],
+    "C-003": ["FM-04"],
+    "C-004": ["FM-01"],
+    "C-005": ["FM-01"],
+    "C-006": ["FM-06"],
+    "C-007": ["FM-02"],
+    "C-008": ["FM-04", "FM-05", "FM-08"],
+    "C-009": ["FM-03"],
+    "C-010": ["FM-01"],
+    "C-011": ["FM-07"],
+    "C-012": ["FM-07"],
+    "C-013": ["FM-02"],
+    "C-014": ["FM-04", "FM-05", "FM-08"],
+}
+
+TRACE_PROVENANCE_BY_CLAIM: dict[str, str] = {
+    "C-001": "fixed:C-001@11",
+    "C-002": "seeded_regression:C-002@11",
+    "C-003": "fixed:C-003@11",
+    "C-004": "fixed:C-004@11",
+    "C-005": "fixed:C-005@11",
+    "C-006": "probe_stale_clause:C-006@11",
+    "C-007": "probe_ignore_denied:C-007@11",
+    "C-008": "fixed:C-008@11",
+    "C-009": "fixed:C-009@11",
+    "C-010": "probe_leaky_trace:C-010@11",
+    "C-011": "probe_sibling_refund:C-011@11",
+    "C-012": "fixed:C-012@11",
+    "C-013": "fixed:C-013@11",
+    "C-014": "probe_pre_deducted:C-014@11",
+}
+
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -46,11 +82,11 @@ def build(source: Path = SOURCE) -> tuple[int, int]:
         items.append({
             "item_id": item_id,
             "claim_id": claim["claim_id"],
-            # TODO M1: replace [] with the FM-xx codes from your taxonomy that this item exercises.
-            "failure_modes": [],
+            "failure_modes": FAILURE_MODES_BY_CLAIM.get(claim["claim_id"], []),
             "provenance": {"source": "lab8_public", "matrix_id": claim.get("matrix_id"),
-                           "from_trace": None, "generator": None,
-                           "label_by": "lab8_matrix", "checked_by": None},
+                           "from_trace": TRACE_PROVENANCE_BY_CLAIM.get(claim["claim_id"]),
+                           "generator": "m1_trace_review",
+                           "label_by": "lab8_matrix", "checked_by": "team_trace_review"},
             "split": "regression",
             "eval_set_version": VERSION,
         })

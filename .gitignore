@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
-src/reports/
+src/reports/README.md
 src/traces/
 *.sqlite
 

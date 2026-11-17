@@ -10,18 +10,18 @@ python -m lab9.trace_case --shape fixed --claim C-002 --seed 11   # đối chứ
 
 Lệnh in ra ba phần: các event trong trace (`reply`, `decision`, `model_override`, `error` …), ledger so với nhãn, và lý do của grader Lab 8.
 
-## Mẫu điền (mỗi nhóm 1 case, lấy từ trial đang fail trong report)
+## Case M1 — ticket ghi đè dữ liệu DB
 
 | Trường | Nội dung |
 |---|---|
-| Trial | `<shape> <claim>@<seed>`, run ID trong report |
-| Triệu chứng | Grader nào fail; reply nói gì so với ledger ghi gì |
-| Bước sai đầu tiên | Số thứ tự event + kind + trích payload (≤1 dòng) |
-| Vì sao là bước *đầu tiên* | Các bước trước đó đúng ra sao (dẫn số event) |
-| Failure mode | Mã FM-xx trong `docs/failure_taxonomy.md` |
-| Đối chứng | Cùng claim@seed trên shape `fixed`: bước đó khác thế nào |
-| Regression test | Tên test + grader/assert nào bắt được; đã thấy fail trên variant lỗi và pass trên `fixed` chưa |
-| Chưa chắc chắn | Điều trace không chứng minh được |
+| Trial | `seeded_regression C-002@11`; run ID dạng `R-seeded_regression-C-002-s11` |
+| Triệu chứng | Lab 8 grader fail `status resolved != denied`; ledger ghi `20000` và 1 refund, nhãn yêu cầu 0 và denied. |
+| Bước sai đầu tiên | Event 3 `model_override`: `delay_days` bị đổi thành 5. |
+| Vì sao là bước *đầu tiên* | Event 1 chỉ handoff allowlist; event 2 đọc order và thấy DB `delay_days=2`; sai lệch bắt đầu ở event 3. |
+| Failure mode | `FM-03 ticket_trust` |
+| Đối chứng | `fixed C-002@11` giữ `delay_days=2`, quote bằng 0, không gọi refund và trả denied. |
+| Regression test | `tests/test_swarm_reference.py::test_reference_weakness_is_visible_on_public_t02`; variant lỗi fail ở C-002@55, `fixed` giữ đúng kết quả. |
+| Chưa chắc chắn | Trace chứng minh quyết định sai trong trial này; chưa chứng minh tần suất tương tự trên model thật. |
 
 ## Quy tắc
 
